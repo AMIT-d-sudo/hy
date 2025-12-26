@@ -1,6 +1,8 @@
 // ===== CONFIGURATION =====
 const CONFIG = {
-    STORAGE_KEY: 'file_sharing_system',
+    STORAGE_KEY: 'jigyasa_file_sharing_system',
+    PASSWORD_KEY: 'jigyasa_access_password',
+    PASSWORD: 'jigyasa', // Default password
     MAX_STORAGE: 1 * 1024 * 1024 * 1024, // 1GB in bytes
     MAX_FILE_SIZE: 50 * 1024 * 1024, // 50MB per file
     ITEMS_PER_PAGE: 6, // Reduced for mobile
@@ -28,13 +30,29 @@ let state = {
         totalDownloads: 0,
         filesToday: 0
     },
-    currentPreviewFile: null
+    currentPreviewFile: null,
+    isAuthenticated: false
 };
 
 // ===== DOM ELEMENTS =====
 const elements = {
+    // Password Screen
+    passwordScreen: document.getElementById('passwordScreen'),
+    passwordInput: document.getElementById('passwordInput'),
+    passwordToggle: document.getElementById('passwordToggle'),
+    passwordSubmit: document.getElementById('passwordSubmit'),
+    passwordError: document.getElementById('passwordError'),
+    
     // Loading
     loadingScreen: document.getElementById('loadingScreen'),
+    loadingStatus: document.getElementById('loadingStatus'),
+    
+    // Main App
+    mainApp: document.getElementById('mainApp'),
+    
+    // Logout
+    logoutBtn: document.getElementById('logoutBtn'),
+    mobileLogoutBtn: document.getElementById('mobileLogoutBtn'),
     
     // Mobile elements
     mobileMenuBtn: document.getElementById('mobileMenuBtn'),
@@ -96,11 +114,97 @@ const elements = {
     downloadPreviewBtn: document.getElementById('downloadPreviewBtn'),
     sharePreviewBtn: document.getElementById('sharePreviewBtn'),
     deletePreviewBtn: document.getElementById('deletePreviewBtn'),
-    
-    // Other
-    helpModal: document.getElementById('helpModal'),
-    closeHelpBtn: document.getElementById('closeHelpBtn')
 };
+
+// ===== PASSWORD AUTHENTICATION =====
+function initPasswordAuth() {
+    // Check if already authenticated
+    const savedAuth = localStorage.getItem(CONFIG.PASSWORD_KEY);
+    if (savedAuth === 'authenticated') {
+        showMainApp();
+        return;
+    }
+    
+    // Show password screen
+    elements.passwordScreen.style.display = 'flex';
+    
+    // Password toggle visibility
+    elements.passwordToggle.addEventListener('click', () => {
+        const type = elements.passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+        elements.passwordInput.setAttribute('type', type);
+        elements.passwordToggle.innerHTML = type === 'password' ? '<i class="fas fa-eye"></i>' : '<i class="fas fa-eye-slash"></i>';
+    });
+    
+    // Enter key to submit
+    elements.passwordInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            checkPassword();
+        }
+    });
+    
+    // Submit button
+    elements.passwordSubmit.addEventListener('click', checkPassword);
+}
+
+function checkPassword() {
+    const enteredPassword = elements.passwordInput.value.trim();
+    
+    if (enteredPassword === CONFIG.PASSWORD) {
+        // Successful authentication
+        elements.passwordError.style.display = 'none';
+        localStorage.setItem(CONFIG.PASSWORD_KEY, 'authenticated');
+        showMainApp();
+    } else {
+        // Wrong password
+        elements.passwordError.style.display = 'flex';
+        elements.passwordInput.value = '';
+        elements.passwordInput.focus();
+        
+        // Shake animation
+        elements.passwordInput.style.animation = 'shake 0.5s';
+        setTimeout(() => {
+            elements.passwordInput.style.animation = '';
+        }, 500);
+    }
+}
+
+function showMainApp() {
+    elements.passwordScreen.style.display = 'none';
+    elements.loadingScreen.style.display = 'flex';
+    
+    // Simulate loading process
+    const loadingMessages = [
+        'सिस्टम तैयार हो रहा है',
+        'फाइलें लोड हो रही हैं',
+        'सुरक्षा जाँच हो रही है',
+        'लगभग तैयार...'
+    ];
+    
+    let messageIndex = 0;
+    const messageInterval = setInterval(() => {
+        if (messageIndex < loadingMessages.length) {
+            elements.loadingStatus.textContent = loadingMessages[messageIndex];
+            messageIndex++;
+        } else {
+            clearInterval(messageInterval);
+            elements.loadingScreen.style.display = 'none';
+            elements.mainApp.style.display = 'block';
+            state.isAuthenticated = true;
+            initApp();
+        }
+    }, 800);
+}
+
+function logout() {
+    if (confirm('क्या आप वाकई लॉगआउट करना चाहते हैं?')) {
+        localStorage.removeItem(CONFIG.PASSWORD_KEY);
+        state.isAuthenticated = false;
+        elements.mainApp.style.display = 'none';
+        elements.passwordScreen.style.display = 'flex';
+        elements.passwordInput.value = '';
+        elements.passwordError.style.display = 'none';
+    }
+}
 
 // ===== UTILITY FUNCTIONS =====
 function formatFileSize(bytes) {
@@ -842,7 +946,7 @@ function shareFile(fileId) {
         // Use Web Share API if available
         navigator.share({
             title: file.name,
-            text: `${file.name} फाइल देखें`,
+            text: `${file.name} फाइल देखें - जिज्ञासा`,
             url: shareUrl
         }).then(() => {
             showNotification('फाइल शेयर की गई', 'success');
@@ -903,6 +1007,10 @@ function clearAllFiles() {
 
 // ===== UI CONTROLS =====
 function initUIControls() {
+    // Logout buttons
+    elements.logoutBtn.addEventListener('click', logout);
+    elements.mobileLogoutBtn.addEventListener('click', logout);
+    
     // Search
     elements.searchBox.addEventListener('input', (e) => {
         state.searchQuery = e.target.value;
@@ -970,6 +1078,61 @@ function showNotification(message, type = 'info') {
         </button>
     `;
     
+    // Add styles if not already added
+    if (!document.querySelector('#notification-styles')) {
+        const style = document.createElement('style');
+        style.id = 'notification-styles';
+        style.textContent = `
+            .notification {
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 1rem 1.5rem;
+                border-radius: 8px;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                z-index: 3000;
+                animation: slideInRight 0.3s ease;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                max-width: 400px;
+            }
+            .notification-success {
+                background: #d4edda;
+                color: #155724;
+                border: 1px solid #c3e6cb;
+            }
+            .notification-error {
+                background: #f8d7da;
+                color: #721c24;
+                border: 1px solid #f5c6cb;
+            }
+            .notification-info {
+                background: #d1ecf1;
+                color: #0c5460;
+                border: 1px solid #bee5eb;
+            }
+            .notification-close {
+                background: none;
+                border: none;
+                cursor: pointer;
+                color: inherit;
+                padding: 0;
+                margin-left: 10px;
+            }
+            @keyframes slideInRight {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+                20%, 40%, 60%, 80% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+    
     // Add to DOM
     document.body.appendChild(notification);
     
@@ -1006,12 +1169,7 @@ function scrollToUpload() {
 }
 
 // ===== INITIALIZATION =====
-function init() {
-    // Hide loading screen after 1 second
-    setTimeout(() => {
-        elements.loadingScreen.style.display = 'none';
-    }, 1000);
-    
+function initApp() {
     // Load data from storage
     loadFromStorage();
     
@@ -1026,7 +1184,9 @@ function init() {
     // Show welcome message
     setTimeout(() => {
         if (state.files.length === 0) {
-            showNotification('पहली फाइल अपलोड करने के लिए ऊपर "अपलोड" सेक्शन में जाएं', 'info');
+            showNotification('जिज्ञासा में आपका स्वागत है! पहली फाइल अपलोड करें', 'info');
+        } else {
+            showNotification(`जिज्ञासा में वापस आपका स्वागत है! ${state.files.length} फाइलें उपलब्ध हैं`, 'success');
         }
     }, 1500);
     
@@ -1054,4 +1214,4 @@ function init() {
 }
 
 // Start the application
-document.addEventListener('DOMContentLoaded', init);
+document.addEventListener('DOMContentLoaded', initPasswordAuth);
