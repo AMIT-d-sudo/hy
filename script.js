@@ -2,10 +2,11 @@
 const CONFIG = {
     STORAGE_KEY: 'jigyasa_file_sharing_system',
     PASSWORD_KEY: 'jigyasa_access_password',
-    PASSWORD: 'jigyasa', // Default password
-    MAX_STORAGE: 1 * 1024 * 1024 * 1024, // 1GB in bytes
-    MAX_FILE_SIZE: 50 * 1024 * 1024, // 50MB per file
-    ITEMS_PER_PAGE: 6, // Reduced for mobile
+    PASSWORD: 'jigyasa7489', // Default password
+    MAX_STORAGE: 10 * 1024 * 1024 * 1024, // 10GB in bytes
+    MAX_FILE_SIZE: 100 * 1024 * 1024, // 100MB per file
+    MAX_FILE_COUNT: 1000, // Maximum 1000 files
+    ITEMS_PER_PAGE: 6,
     SUPPORTED_TYPES: {
         'pdf': ['pdf'],
         'image': ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'],
@@ -174,10 +175,10 @@ function showMainApp() {
     
     // Simulate loading process
     const loadingMessages = [
-        'सिस्टम तैयार हो रहा है',
-        'फाइलें लोड हो रही हैं',
-        'सुरक्षा जाँच हो रही है',
-        'लगभग तैयार...'
+        'System initializing',
+        'Loading files',
+        'Security check',
+        'Almost ready...'
     ];
     
     let messageIndex = 0;
@@ -196,7 +197,7 @@ function showMainApp() {
 }
 
 function logout() {
-    if (confirm('क्या आप वाकई लॉगआउट करना चाहते हैं?')) {
+    if (confirm('Are you sure you want to logout?')) {
         localStorage.removeItem(CONFIG.PASSWORD_KEY);
         state.isAuthenticated = false;
         elements.mainApp.style.display = 'none';
@@ -250,7 +251,7 @@ function getFileColor(type) {
 }
 
 function formatDate(date) {
-    return new Date(date).toLocaleDateString('hi-IN', {
+    return new Date(date).toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'short',
         day: 'numeric',
@@ -267,10 +268,10 @@ function getTimeAgo(date) {
     const hours = Math.floor(minutes / 60);
     const days = Math.floor(hours / 24);
     
-    if (days > 0) return `${days} दिन पहले`;
-    if (hours > 0) return `${hours} घंटे पहले`;
-    if (minutes > 0) return `${minutes} मिनट पहले`;
-    return 'अभी';
+    if (days > 0) return `${days} days ago`;
+    if (hours > 0) return `${hours} hours ago`;
+    if (minutes > 0) return `${minutes} minutes ago`;
+    return 'Just now';
 }
 
 // ===== MOBILE SPECIFIC FUNCTIONS =====
@@ -353,9 +354,9 @@ function updateBottomNav() {
 
 function getSectionName(id) {
     const names = {
-        'upload': 'अपलोड',
-        'files': 'फाइलें',
-        'stats': 'स्टैट्स'
+        'upload': 'Upload',
+        'files': 'Files',
+        'stats': 'Stats'
     };
     return names[id] || '';
 }
@@ -373,7 +374,7 @@ function saveToStorage() {
         return true;
     } catch (error) {
         console.error('Storage error:', error);
-        showNotification('स्टोरेज में सेव करने में त्रुटि', 'error');
+        showNotification('Error saving to storage', 'error');
         return false;
     }
 }
@@ -409,7 +410,7 @@ function updateStorageDisplay() {
     const percent = (used / CONFIG.MAX_STORAGE) * 100;
     
     elements.usedStorage.textContent = formatFileSize(used);
-    elements.totalStorage.textContent = '1 GB';
+    elements.totalStorage.textContent = '10 GB';
     elements.freeStorage.textContent = formatFileSize(free);
     elements.usedPercent.textContent = percent.toFixed(1) + '%';
     elements.storageMeter.style.width = Math.min(percent, 100) + '%';
@@ -483,24 +484,30 @@ function handleFiles(fileList) {
     const files = Array.from(fileList);
     let validFiles = 0;
     
+    // Check total file count limit
+    if (state.files.length + files.length > CONFIG.MAX_FILE_COUNT) {
+        showNotification(`Cannot upload ${files.length} files. Maximum ${CONFIG.MAX_FILE_COUNT} files allowed.`, 'error');
+        return;
+    }
+    
     files.forEach(file => {
         // Check file size
         if (file.size > CONFIG.MAX_FILE_SIZE) {
-            showNotification(`${file.name} - 50MB से बड़ी फाइल नहीं अपलोड कर सकते`, 'error');
+            showNotification(`${file.name} - File larger than 100MB cannot be uploaded`, 'error');
             return;
         }
         
         // Check total storage
         const newTotalSize = state.stats.totalSize + file.size;
         if (newTotalSize > CONFIG.MAX_STORAGE) {
-            showNotification('1GB स्टोरेज पूरी हो गई! कुछ फाइलें डिलीट करें', 'error');
+            showNotification('10GB storage full! Please delete some files', 'error');
             return;
         }
         
         // Check file type
         const type = getFileType(file.name);
         if (type === 'other') {
-            showNotification(`${file.name} - यह फाइल टाइप सपोर्टेड नहीं है`, 'error');
+            showNotification(`${file.name} - This file type is not supported`, 'error');
             return;
         }
         
@@ -520,7 +527,7 @@ function handleFiles(fileList) {
     
     if (validFiles > 0) {
         updateSelectedFilesUI();
-        showNotification(`${validFiles} फाइलें चुन ली गईं`, 'success');
+        showNotification(`${validFiles} files selected`, 'success');
     }
 }
 
@@ -610,14 +617,14 @@ async function startUpload() {
             
         } catch (error) {
             console.error('Upload error:', error);
-            showNotification(`${fileData.name} अपलोड में त्रुटि`, 'error');
+            showNotification(`${fileData.name} upload error`, 'error');
         }
     }
     
     // Complete
     elements.progressPercent.textContent = '100%';
     elements.progressFill.style.width = '100%';
-    elements.currentFile.textContent = 'सभी फाइलें अपलोड हो गईं';
+    elements.currentFile.textContent = 'All files uploaded';
     
     // Save to storage
     updateStats();
@@ -631,7 +638,7 @@ async function startUpload() {
         updateSelectedFilesUI();
         loadFiles();
         
-        showNotification(`${totalFiles} फाइलें सफलतापूर्वक अपलोड हो गईं`, 'success');
+        showNotification(`${totalFiles} files uploaded successfully`, 'success');
         
         // Scroll to files section on mobile
         if (window.innerWidth < 768) {
@@ -719,34 +726,34 @@ function renderFilesGrid(files) {
             <div class="file-card-body">
                 <div class="file-card-meta">
                     <div class="meta-item">
-                        <span class="label">साइज</span>
+                        <span class="label">Size</span>
                         <span class="value">${formatFileSize(file.size)}</span>
                     </div>
                     <div class="meta-item">
-                        <span class="label">व्यू</span>
+                        <span class="label">Views</span>
                         <span class="value">${file.views}</span>
                     </div>
                     <div class="meta-item">
-                        <span class="label">डाउनलोड</span>
+                        <span class="label">Downloads</span>
                         <span class="value">${file.downloads}</span>
                     </div>
                 </div>
                 <div class="file-card-actions">
                     <button class="file-card-btn view" onclick="previewFile('${file.id}')">
                         <i class="fas fa-eye"></i>
-                        <span>देखें</span>
+                        <span>View</span>
                     </button>
                     <button class="file-card-btn download" onclick="downloadFile('${file.id}')">
                         <i class="fas fa-download"></i>
-                        <span>डाउनलोड</span>
+                        <span>Download</span>
                     </button>
                     <button class="file-card-btn share" onclick="shareFile('${file.id}')">
                         <i class="fas fa-share-alt"></i>
-                        <span>शेयर</span>
+                        <span>Share</span>
                     </button>
                     <button class="file-card-btn delete" onclick="deleteFile('${file.id}')">
                         <i class="fas fa-trash"></i>
-                        <span>डिलीट</span>
+                        <span>Delete</span>
                     </button>
                 </div>
             </div>
@@ -815,7 +822,7 @@ function previewFile(fileId) {
     elements.previewFileName.textContent = file.name;
     elements.previewFileSize.textContent = formatFileSize(file.size);
     elements.previewFileDate.textContent = formatDate(file.uploadDate);
-    elements.previewFileViews.textContent = `${file.views} व्यू`;
+    elements.previewFileViews.textContent = `${file.views} views`;
     
     // Clear previous content
     elements.previewBody.innerHTML = '';
@@ -861,15 +868,15 @@ function previewFile(fileId) {
             const text = atob(base64Data);
             elements.previewBody.innerHTML = `
                 <div class="preview-text-container">
-                    <pre>${text.substring(0, 3000)}${text.length > 3000 ? '\n\n... (आगे का कंटेंट डाउनलोड करके देखें)' : ''}</pre>
+                    <pre>${text.substring(0, 3000)}${text.length > 3000 ? '\n\n... (Download to view more content)' : ''}</pre>
                 </div>
             `;
         } catch (e) {
             elements.previewBody.innerHTML = `
                 <div class="preview-other-container">
                     <i class="fas fa-file-alt"></i>
-                    <h4>टेक्स्ट फाइल</h4>
-                    <p>इस फाइल को डाउनलोड करके देखें</p>
+                    <h4>Text File</h4>
+                    <p>Download to view this file</p>
                 </div>
             `;
         }
@@ -878,9 +885,9 @@ function previewFile(fileId) {
         elements.previewBody.innerHTML = `
             <div class="preview-other-container">
                 <i class="fas ${getFileIcon(file.type)}"></i>
-                <h4>${file.type.toUpperCase()} फाइल</h4>
-                <p>इस फाइल को डाउनलोड करके देखें</p>
-                <p><small>फाइल साइज: ${formatFileSize(file.size)}</small></p>
+                <h4>${file.type.toUpperCase()} File</h4>
+                <p>Download to view this file</p>
+                <p><small>File size: ${formatFileSize(file.size)}</small></p>
             </div>
         `;
     }
@@ -905,7 +912,7 @@ function previewFile(fileId) {
 function downloadFile(fileId) {
     const file = state.files.find(f => f.id === fileId);
     if (!file) {
-        showNotification('फाइल नहीं मिली', 'error');
+        showNotification('File not found', 'error');
         return;
     }
     
@@ -927,11 +934,11 @@ function downloadFile(fileId) {
         updateStats();
         loadFiles();
         
-        showNotification(`${file.name} डाउनलोड शुरू हो गया`, 'success');
+        showNotification(`${file.name} download started`, 'success');
         
     } catch (error) {
         console.error('Download error:', error);
-        showNotification('डाउनलोड में त्रुटि', 'error');
+        showNotification('Download error', 'error');
     }
 }
 
@@ -946,10 +953,10 @@ function shareFile(fileId) {
         // Use Web Share API if available
         navigator.share({
             title: file.name,
-            text: `${file.name} फाइल देखें - जिज्ञासा`,
+            text: `View ${file.name} file - Jigyasa`,
             url: shareUrl
         }).then(() => {
-            showNotification('फाइल शेयर की गई', 'success');
+            showNotification('File shared', 'success');
         }).catch(() => {
             copyToClipboard(shareUrl);
         });
@@ -959,7 +966,7 @@ function shareFile(fileId) {
 }
 
 function deleteFile(fileId) {
-    if (!confirm('क्या आप वाकई इस फाइल को डिलीट करना चाहते हैं?')) {
+    if (!confirm('Are you sure you want to delete this file?')) {
         return;
     }
     
@@ -981,11 +988,11 @@ function deleteFile(fileId) {
     updateStats();
     loadFiles();
     
-    showNotification('फाइल डिलीट हो गई', 'success');
+    showNotification('File deleted', 'success');
 }
 
 function clearAllFiles() {
-    if (!confirm('क्या आप सभी फाइलें डिलीट करना चाहते हैं?\nयह एक्शन पूर्ववत नहीं किया जा सकता!')) {
+    if (!confirm('Are you sure you want to delete all files?\nThis action cannot be undone!')) {
         return;
     }
     
@@ -1002,7 +1009,7 @@ function clearAllFiles() {
     updateStats();
     loadFiles();
     
-    showNotification('सभी फाइलें डिलीट हो गईं', 'success');
+    showNotification('All files deleted', 'success');
 }
 
 // ===== UI CONTROLS =====
@@ -1151,7 +1158,7 @@ function showNotification(message, type = 'info') {
 
 function copyToClipboard(text) {
     navigator.clipboard.writeText(text).then(() => {
-        showNotification('लिंक कॉपी हो गया', 'success');
+        showNotification('Link copied to clipboard', 'success');
     }).catch(() => {
         // Fallback
         const textarea = document.createElement('textarea');
@@ -1160,7 +1167,7 @@ function copyToClipboard(text) {
         textarea.select();
         document.execCommand('copy');
         document.body.removeChild(textarea);
-        showNotification('लिंक कॉपी हो गया', 'success');
+        showNotification('Link copied to clipboard', 'success');
     });
 }
 
@@ -1184,9 +1191,9 @@ function initApp() {
     // Show welcome message
     setTimeout(() => {
         if (state.files.length === 0) {
-            showNotification('जिज्ञासा में आपका स्वागत है! पहली फाइल अपलोड करें', 'info');
+            showNotification('Welcome to Jigyasa! Upload your first file', 'info');
         } else {
-            showNotification(`जिज्ञासा में वापस आपका स्वागत है! ${state.files.length} फाइलें उपलब्ध हैं`, 'success');
+            showNotification(`Welcome back to Jigyasa! ${state.files.length} files available`, 'success');
         }
     }, 1500);
     
