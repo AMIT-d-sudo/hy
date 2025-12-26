@@ -40,6 +40,188 @@ body {
     padding: 0 15px;
 }
 
+/* Password Screen */
+.password-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    padding: 20px;
+}
+
+.password-container {
+    background: white;
+    border-radius: var(--radius);
+    padding: 2.5rem;
+    width: 100%;
+    max-width: 450px;
+    box-shadow: var(--shadow-lg);
+    text-align: center;
+}
+
+.password-logo {
+    margin-bottom: 2rem;
+}
+
+.password-logo i {
+    font-size: 4rem;
+    color: var(--primary);
+    margin-bottom: 1rem;
+}
+
+.password-logo h1 {
+    font-size: 2.5rem;
+    color: var(--dark);
+    margin-bottom: 0.5rem;
+}
+
+.password-subtitle {
+    color: var(--gray);
+    font-size: 1rem;
+}
+
+.password-form h2 {
+    color: var(--dark);
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    font-size: 1.5rem;
+}
+
+.password-instruction {
+    color: var(--gray);
+    margin-bottom: 1.5rem;
+    font-size: 0.9rem;
+}
+
+.password-input-group {
+    position: relative;
+    margin-bottom: 1.5rem;
+}
+
+.password-input-group i {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--gray);
+}
+
+.password-input-group input {
+    width: 100%;
+    padding: 15px 45px 15px 45px;
+    border: 2px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.password-input-group input:focus {
+    border-color: var(--primary);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+}
+
+.password-toggle {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--gray);
+    cursor: pointer;
+    padding: 5px;
+}
+
+.password-hint {
+    background: var(--light);
+    padding: 12px 15px;
+    border-radius: var(--radius-sm);
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.9rem;
+    color: var(--dark);
+}
+
+.password-hint i {
+    color: var(--warning);
+}
+
+.btn-password-submit {
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    color: white;
+    border: none;
+    padding: 15px;
+    border-radius: var(--radius-sm);
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: all 0.3s ease;
+    margin-bottom: 1.5rem;
+}
+
+.btn-password-submit:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.password-error {
+    background: #f8d7da;
+    color: #721c24;
+    padding: 12px 15px;
+    border-radius: var(--radius-sm);
+    margin-bottom: 1.5rem;
+    display: none;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.9rem;
+}
+
+.password-error i {
+    color: #721c24;
+}
+
+.password-footer {
+    border-top: 1px solid var(--border);
+    padding-top: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+.password-footer p {
+    color: var(--gray);
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+/* Logout Button */
+.btn-logout {
+    background: var(--danger) !important;
+    color: white !important;
+}
+
+.btn-logout:hover {
+    background: #d1144a !important;
+}
+
 /* Loading Screen */
 .loading-screen {
     position: fixed;
@@ -60,9 +242,18 @@ body {
     padding: 20px;
 }
 
-.loading-content i {
-    font-size: 3rem;
-    margin-bottom: 1.5rem;
+.loading-logo {
+    margin-bottom: 2rem;
+}
+
+.loading-logo i {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+}
+
+.loading-logo h2 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
 }
 
 .loading-content h3 {
@@ -76,6 +267,7 @@ body {
     background: rgba(255,255,255,0.2);
     border-radius: 5px;
     overflow: hidden;
+    margin: 0 auto 1.5rem;
 }
 
 .progress-fill-loading {
@@ -83,6 +275,11 @@ body {
     background: white;
     width: 0%;
     animation: loading 2s infinite;
+}
+
+.loading-status {
+    font-size: 0.9rem;
+    opacity: 0.8;
 }
 
 @keyframes loading {
@@ -156,6 +353,8 @@ body {
     text-decoration: none;
     transition: all 0.3s ease;
     font-size: 0.9rem;
+    border: none;
+    cursor: pointer;
 }
 
 .nav-btn:hover {
@@ -244,10 +443,19 @@ body {
 .mobile-nav-link.btn-danger {
     background: var(--danger);
     color: white;
-    margin-top: auto;
 }
 
 .mobile-nav-link.btn-danger:hover {
+    background: #d1144a;
+}
+
+.mobile-nav-link.btn-logout {
+    background: var(--danger);
+    color: white;
+    margin-top: auto;
+}
+
+.mobile-nav-link.btn-logout:hover {
     background: #d1144a;
 }
 
@@ -1287,7 +1495,7 @@ footer {
 
 /* Responsive */
 @media (max-width: 768px) {
-    .nav-links {
+    .nav-links .nav-btn:not(.mobile-menu-btn) {
         display: none;
     }
     
@@ -1334,6 +1542,14 @@ footer {
     
     .preview-actions {
         grid-template-columns: repeat(3, 1fr);
+    }
+    
+    .password-container {
+        padding: 2rem;
+    }
+    
+    .password-logo h1 {
+        font-size: 2rem;
     }
 }
 
@@ -1396,11 +1612,23 @@ footer {
     .preview-actions {
         grid-template-columns: repeat(3, 1fr);
     }
+    
+    .password-container {
+        padding: 1.5rem;
+    }
+    
+    .password-logo h1 {
+        font-size: 1.8rem;
+    }
+    
+    .password-form h2 {
+        font-size: 1.3rem;
+    }
 }
 
 /* Touch optimizations */
 @media (hover: none) and (pointer: coarse) {
-    .file-card-btn, .nav-btn, .btn-browse, .btn-upload {
+    .file-card-btn, .nav-btn, .btn-browse, .btn-upload, .btn-password-submit {
         min-height: 44px;
     }
     
@@ -1413,7 +1641,7 @@ footer {
         font-size: 16px !important; /* Prevents zoom on iOS */
     }
     
-    .search-box input:focus {
+    .search-box input:focus, .password-input-group input:focus {
         font-size: 16px !important;
     }
 }
@@ -1431,5 +1659,22 @@ footer {
     
     .file-animation {
         display: none;
+    }
+    
+    .password-container {
+        max-width: 400px;
+        padding: 1.5rem;
+    }
+    
+    .password-logo {
+        margin-bottom: 1rem;
+    }
+    
+    .password-logo i {
+        font-size: 3rem;
+    }
+    
+    .password-logo h1 {
+        font-size: 1.8rem;
     }
 }
